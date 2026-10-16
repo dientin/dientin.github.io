@@ -1,14 +1,20 @@
 {
+  "id": "/",
   "name": "Dientin App",
   "short_name": "Dientin",
   "description": "Turnos y pacientes del consultorio odontológico.",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
-  "background_color": "#f7f7fa",
+  "orientation": "any",
+  "background_color": "#6c3cf0",
   "theme_color": "#6c3cf0",
   "lang": "es",
   "icons": [
-    { "src": "img/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
-    { "src": "img/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+    { "src": "img/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "img/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "img/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
+    { "src": "img/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" },
+    { "src": "img/favicon.svg", "sizes": "any", "type": "image/svg+xml" }
   ]
 }

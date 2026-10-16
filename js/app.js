@@ -19,6 +19,8 @@ const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "
 const fd = d => d.split("-").reverse().join("/");
 const fh = s => new Date(s).toLocaleString("es-AR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" });
 const largo = s => new Date(s + "T12:00").toLocaleDateString("es-AR", { weekday: "long", day: "numeric", month: "long" });
+const narrow = matchMedia("(max-width: 480px)");
+const corto = s => new Date(s + "T12:00").toLocaleDateString("es-AR", { weekday: "short", day: "numeric", month: "short" }).replace(/\./g, "");
 const hoyISO = () => iso(new Date());
 const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
 
@@ -49,45 +51,49 @@ function seg(el, onChange) {
   el.addEventListener("click", e => { const b = e.target.closest("button[data-v]"); if (b && !b.disabled) { setSeg(el, b.dataset.v); onChange?.(b.dataset.v); } });
 }
 
-/* ---------- Selector de fecha (uno para toda la app) ---------- */
-const pk = { anchor: null, value: "", cb: null, y: 0, m: 0, years: false };
+/* ---------- Selector de fecha: ruedas verticales día / mes / año ---------- */
+const IH = 40, MESES = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+const Y0 = 1920, Y1 = new Date().getFullYear() + 5;
+const pk = { anchor: null, cb: null };
+const wheels = ["wD", "wM", "wY"].map($);
+const pos = w => Math.round(w.scrollTop / IH);
+// Las listas se arman una sola vez: reconstruirlas hace que el scroll-snap vuelva al inicio
+const list = (w, items) => w.innerHTML = items.map((t, k) => `<button type="button" data-k="${k}">${t}</button>`).join("");
+list(wheels[0], Array.from({ length: 31 }, (_, k) => k + 1)); list(wheels[1], MESES); list(wheels[2], Array.from({ length: Y1 - Y0 + 1 }, (_, k) => Y0 + k));
+function mark(w) { const i = pos(w); [...w.children].forEach((b, k) => b.classList.toggle("on", k === i)); }
+function go(w, i) { w.style.scrollSnapType = "none"; w.scrollTop = i * IH; mark(w); setTimeout(() => w.style.scrollSnapType = ""); }
+function clampDays() {
+  const n = new Date(Y0 + pos(wheels[2]), pos(wheels[1]) + 1, 0).getDate();
+  [...wheels[0].children].forEach((b, k) => b.hidden = k >= n);
+  if (pos(wheels[0]) >= n) go(wheels[0], n - 1);
+}
+function setWheels(v) {
+  const d = new Date(v + "T12:00");
+  go(wheels[1], d.getMonth()); go(wheels[2], d.getFullYear() - Y0); clampDays(); go(wheels[0], d.getDate() - 1);
+}
+wheels.forEach((w, k) => {
+  let t;
+  w.addEventListener("scroll", () => {
+    mark(w);
+    clearTimeout(t); t = setTimeout(() => { if (k) clampDays(); }, 120); // mes/año cambian la cantidad de días
+  });
+  w.addEventListener("click", e => { const b = e.target.closest("[data-k]"); if (b) w.scrollTo({ top: b.dataset.k * IH, behavior: "smooth" }); });
+});
 function openPicker(anchor, value, cb) {
-  const d = value ? new Date(value + "T12:00") : new Date();
-  Object.assign(pk, { anchor, value, cb, y: d.getFullYear(), m: d.getMonth(), years: false });
+  Object.assign(pk, { anchor, cb });
   const p = $("picker");
   (anchor.closest("dialog") || document.body).append(p); // dentro del diálogo modal, si no queda inerte
-  p.classList.remove("hide"); drawPicker();
-  const r = anchor.getBoundingClientRect(), h = p.offsetHeight;
-  p.style.left = Math.min(Math.max(8, r.left), innerWidth - 308) + "px";
+  p.classList.remove("hide"); setWheels(value || hoyISO());
+  const r = anchor.getBoundingClientRect(), h = p.offsetHeight, w = p.offsetWidth;
+  p.style.left = Math.min(Math.max(8, r.left), innerWidth - w - 8) + "px";
   p.style.top = (r.bottom + h + 8 > innerHeight ? Math.max(8, r.top - h - 6) : r.bottom + 6) + "px";
 }
 const closePicker = () => $("picker").classList.add("hide");
-function drawPicker() {
-  const g = $("pkGrid");
-  g.classList.toggle("years", pk.years);
-  if (pk.years) {
-    const y0 = pk.y - (pk.y % 12);
-    $("pkTitle").textContent = `${y0} – ${y0 + 11}`;
-    g.innerHTML = Array.from({ length: 12 }, (_, i) => `<button data-y="${y0 + i}" aria-pressed="${pk.value.startsWith(y0 + i)}">${y0 + i}</button>`).join("");
-    return;
-  }
-  $("pkTitle").textContent = new Date(pk.y, pk.m, 1).toLocaleDateString("es-AR", { month: "long", year: "numeric" });
-  const first = (new Date(pk.y, pk.m, 1).getDay() + 6) % 7, n = new Date(pk.y, pk.m + 1, 0).getDate();
-  let h = ["L", "M", "M", "J", "V", "S", "D"].map(d => `<div class="dow">${d}</div>`).join("") + "<div></div>".repeat(first);
-  for (let d = 1; d <= n; d++) {
-    const k = iso(new Date(pk.y, pk.m, d));
-    h += `<button data-d="${k}" class="${k === hoyISO() ? "today" : ""}" aria-pressed="${k === pk.value}">${d}</button>`;
-  }
-  g.innerHTML = h;
-}
-$("picker").addEventListener("click", e => {
-  const b = e.target.closest("button"); if (!b) return;
-  if (b.dataset.pk) { if (pk.years) pk.y += 12 * b.dataset.pk; else { const d = new Date(pk.y, pk.m + +b.dataset.pk, 1); pk.y = d.getFullYear(); pk.m = d.getMonth(); } }
-  else if (b.id === "pkTitle") pk.years = !pk.years;
-  else if (b.dataset.y) { pk.y = +b.dataset.y; pk.years = false; }
-  else if (b.dataset.d) { closePicker(); pk.cb(b.dataset.d); return; }
-  drawPicker();
-});
+$("pkToday").onclick = () => setWheels(hoyISO());
+$("pkOk").onclick = () => {
+  const y = Y0 + pos(wheels[2]), m = pos(wheels[1]), d = Math.min(pos(wheels[0]) + 1, new Date(y, m + 1, 0).getDate());
+  closePicker(); pk.cb(iso(new Date(y, m, d))); // leer antes de ocultar: oculto, scrollTop vale 0
+};
 ["scroll", "resize"].forEach(ev => addEventListener(ev, e => { if (!e.target.closest?.("#picker")) closePicker(); }, true));
 document.addEventListener("pointerdown", e => {
   if (!$("picker").classList.contains("hide") && !e.target.closest("#picker") && e.target !== pk.anchor) closePicker();
@@ -134,7 +140,7 @@ function render() {
   $("plst").innerHTML = pacientes.map(p => `<option value="${esc(p.nombre)}">`).join("");
 }
 function renderA() {
-  $("fechaBtn").textContent = largo(current) + (current === hoyISO() ? " · hoy" : "");
+  $("fechaBtn").textContent = (narrow.matches ? corto : largo)(current) + (current === hoyISO() ? " · hoy" : "");
   const q = $("buscar").value.trim().toLowerCase(), v = $("vista");
   if (q) {
     const r = turnos.filter(t => (t.nombre + " " + (t.tel || "")).toLowerCase().includes(q)).sort((a, b) => (b.dia + b.hora).localeCompare(a.dia + a.hora));
@@ -162,7 +168,7 @@ function renderC() {
   $("cstats").innerHTML = stat(mes.length - c("cancelado"), "turnos en el mes") + stat(c("confirmado"), "confirmados", "c-conf") + stat(c("pendiente"), "sin confirmar", "c-pend") + stat(c("atendido"), "atendidos", "c-done") + stat(c("cancelado"), "cancelados", "c-canc");
   const ok = t => fil === "todos" ? activo(t) : t.est === fil;
   const first = (new Date(y, m, 1).getDay() + 6) % 7, dias = new Date(y, m + 1, 0).getDate();
-  let h = ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"].map(d => `<div class="dow">${d}</div>`).join("") + "<div></div>".repeat(first);
+  let h = (narrow.matches ? ["L", "M", "M", "J", "V", "S", "D"] : ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"]).map(d => `<div class="dow">${d}</div>`).join("") + "<div></div>".repeat(first);
   for (let d = 1; d <= dias; d++) {
     const k = pre + "-" + String(d).padStart(2, "0"), ts = mes.filter(t => t.dia === k && ok(t));
     const pend = fil === "todos" ? ts.filter(t => t.est === "pendiente").length : 0;
@@ -172,7 +178,7 @@ function renderC() {
   $("cgrid").innerHTML = h;
   if (!calSel) { $("cdet").innerHTML = `<p class="empty">Tocá un día para ver sus turnos. Verde: turnos · naranja: sin confirmar.</p>`; return; }
   const ds = turnos.filter(t => t.dia === calSel && ok(t)).sort((a, b) => a.hora.localeCompare(b.hora));
-  $("cdet").innerHTML = `<div class="det-head"><b>${largo(calSel)}</b><span class="acts"><button class="btn soft" data-go>Ver agenda del día</button><button class="btn primary" data-add>Agendar turno</button></span></div>`
+  $("cdet").innerHTML = `<div class="det-head"><b>${largo(calSel)}</b><span class="acts"><button class="btn soft" data-go><span class="t-lg">Ver agenda del día</span><span class="t-sm">Ver día</span></button><button class="btn primary" data-add><span class="t-lg">Agendar turno</span><span class="t-sm">Agendar</span></button></span></div>`
     + `<div class="list">${ds.length ? ds.map((t, i) => card(t, false, i)).join("") : `<p class="empty">No hay turnos para este día con el filtro elegido.</p>`}</div>`;
 }
 function renderP() {
@@ -200,6 +206,7 @@ function tab(v) {
   render();
 }
 seg($("tabs"), tab);
+narrow.addEventListener("change", () => store && render());
 $("nuevo").onclick = () => view === "pacientes" ? openP(null) : open(null);
 const shift = n => { const d = new Date(current + "T12:00"); d.setDate(d.getDate() + n); current = iso(d); render(); };
 $("prev").onclick = () => shift(-1); $("next").onclick = () => shift(1);
@@ -353,13 +360,21 @@ $("media").onclick = async e => {
 $("meBtn").onclick = () => $("meMenu").classList.toggle("hide");
 document.addEventListener("pointerdown", e => { if (!e.target.closest("#meMenu,#meBtn")) $("meMenu").classList.add("hide"); });
 $("salir").onclick = () => logout();
-function applyTheme(t) {
-  if (t === "auto") delete document.documentElement.dataset.theme; else document.documentElement.dataset.theme = t;
+// Tema: un botón claro/oscuro. Sin elección guardada sigue al sistema.
+const isDark = () => (document.documentElement.dataset.theme || (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light")) === "dark";
+function paintTheme() {
+  const d = isDark();
+  $("themeBtn").querySelector("use").setAttribute("href", d ? "#i-sun" : "#i-moon");
+  $("themeBtn").setAttribute("aria-label", d ? "Cambiar a modo claro" : "Cambiar a modo oscuro");
   document.querySelector("meta[name=theme-color]").content = getComputedStyle(document.body).backgroundColor;
-  try { localStorage.setItem("dientin-theme", t); } catch {}
 }
-setSeg($("theme"), document.documentElement.dataset.theme || "auto");
-seg($("theme"), applyTheme);
+$("themeBtn").onclick = () => {
+  const t = isDark() ? "light" : "dark";
+  document.documentElement.dataset.theme = t;
+  try { localStorage.setItem("dientin-theme", t); } catch {}
+  paintTheme();
+};
+paintTheme();
 
 /* ---------- Equipo (solo admin) ---------- */
 function renderU() {

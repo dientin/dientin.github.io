@@ -11,6 +11,9 @@
 <link rel="apple-touch-icon" href="img/apple-touch-icon.png">
 <link rel="manifest" href="site.webmanifest">
 <meta name="apple-mobile-web-app-title" content="Dientin">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Dientin App">
 <meta property="og:title" content="Dientin App">
@@ -24,9 +27,9 @@
 <meta name="twitter:card" content="summary_large_image">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
-<meta name="app-version" content="20261016191450">
-<link rel="stylesheet" href="css/app.css?v=20261016191450">
-<script>try{const t=localStorage.getItem("dientin-theme");if(t&&t!=="auto")document.documentElement.dataset.theme=t}catch(e){}</script>
+<meta name="app-version" content="20261016193541">
+<link rel="stylesheet" href="css/app.css?v=20261016193541">
+<script>try{const t=localStorage.getItem("dientin-theme");if(t==="light"||t==="dark")document.documentElement.dataset.theme=t}catch(e){}</script>
 </head>
 <body>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
@@ -37,13 +40,15 @@
   <symbol id="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></symbol>
   <symbol id="i-plus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></symbol>
   <symbol id="i-hourglass" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2h12M6 22h12M7 2v4a5 5 0 0 0 10 0V2M7 22v-4a5 5 0 0 1 10 0v4"/></symbol>
+  <symbol id="i-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></symbol>
+  <symbol id="i-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></symbol>
   <symbol id="i-alert" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v4M12 16h.01"/></symbol>
 </svg>
 
 <!-- Login -->
 <section id="login" class="login hide">
   <aside class="login-side">
-    <div class="brand"><span class="logo"><svg class="i" aria-hidden="true"><use href="#i-tooth"/></svg></span><b>Dientin</b><span>App</span></div>
+    <div class="brand"><span class="logo"><svg class="i" aria-hidden="true"><use href="#i-tooth"/></svg></span><span class="name">Dientin <span class="tagline">App</span></span></div>
     <div>
       <h2>La agenda de tu consultorio, simple y ordenada.</h2>
       <p>Turnos, pacientes y fichas en un solo lugar, desde la compu o el celular.</p>
@@ -53,6 +58,7 @@
   </aside>
   <div class="login-main">
     <div class="authcard card-in" id="authCard">
+      <div class="brand auth-brand"><span class="logo"><svg class="i" aria-hidden="true"><use href="#i-tooth"/></svg></span><span class="name">Dientin <span class="tagline">App</span></span></div>
       <h1>Ingresá a Dientin</h1>
       <p class="muted">Usá tu cuenta del consultorio.</p>
       <form id="authF">
@@ -68,6 +74,7 @@
       <p class="err" id="loginErr" role="alert"></p>
     </div>
     <div class="authcard card-in hide" id="pending">
+      <div class="brand auth-brand"><span class="logo"><svg class="i" aria-hidden="true"><use href="#i-tooth"/></svg></span><span class="name">Dientin <span class="tagline">App</span></span></div>
       <div class="pend-ico"><svg class="i" aria-hidden="true"><use href="#i-hourglass"/></svg></div>
       <h1>Cuenta creada</h1>
       <p class="muted">Un administrador tiene que aprobar tu acceso. Volvé a entrar cuando te avisen.</p>
@@ -79,15 +86,16 @@
 <!-- App -->
 <div id="app" class="hide">
   <header class="top">
-    <div class="brand"><span class="logo"><svg class="i" aria-hidden="true"><use href="#i-tooth"/></svg></span><b>Dientin</b><span class="tagline">App</span></div>
+    <div class="brand"><span class="logo"><svg class="i" aria-hidden="true"><use href="#i-tooth"/></svg></span><span class="name">Dientin <span class="tagline">App</span></span></div>
     <nav class="seg tabs" id="tabs" aria-label="Secciones">
       <button data-v="agenda" aria-pressed="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><span>Agenda</span></button>
-      <button data-v="calendario" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10h18M8 3v4M16 3v4"/></svg><span>Calendario</span></button>
+      <button data-v="calendario" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10h18M8 3v4M16 3v4"/></svg><span class="t-lg">Calendario</span><span class="t-sm">Mes</span></button>
       <button data-v="pacientes" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0M16 4.5a3.5 3.5 0 0 1 0 7M18 14a6 6 0 0 1 3.5 6"/></svg><span>Pacientes</span></button>
       <button data-v="equipo" aria-pressed="false" class="hide" id="tabEquipo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l8 4v5c0 5-3.5 8-8 9-4.5-1-8-4-8-9V7z"/><path d="m9 12 2 2 4-4"/></svg><span>Equipo</span></button>
     </nav>
     <div class="me">
       <button class="btn primary" id="nuevo"><svg class="i plus" aria-hidden="true"><use href="#i-plus"/></svg><span id="nuevoTxt">Nuevo turno</span></button>
+      <button class="btn icon" id="themeBtn" aria-label="Cambiar a modo oscuro"><svg class="i" aria-hidden="true"><use href="#i-moon"/></svg></button>
       <button class="avatar" id="meBtn" aria-label="Mi cuenta"></button>
     </div>
   </header>
@@ -121,7 +129,7 @@
         </div>
         <div class="seg chips" id="cfil">
           <button data-v="todos" aria-pressed="true">Activos</button>
-          <button data-v="pendiente">Sin confirmar</button>
+          <button data-v="pendiente"><span class="t-lg">Sin confirmar</span><span class="t-sm">Pendientes</span></button>
           <button data-v="confirmado">Confirmados</button>
           <button data-v="atendido">Atendidos</button>
           <button data-v="cancelado">Cancelados</button>
@@ -139,7 +147,7 @@
         <div class="search"><input type="search" id="bp" placeholder="Buscar por nombre, teléfono, DNI u obra social"></div>
       </div>
       <div class="seg chips sm" id="bcob">
-        <button data-v="" aria-pressed="true">Toda cobertura</button>
+        <button data-v="" aria-pressed="true"><span class="t-lg">Toda cobertura</span><span class="t-sm">Todas</span></button>
         <button data-v="particular">Particular</button>
         <button data-v="obra social">Obra social</button>
         <button data-v="prepaga">Prepaga</button>
@@ -237,15 +245,15 @@
 
 <!-- Selector de fecha (uno solo, se reubica) -->
 <div class="picker hide" id="picker" role="dialog" aria-label="Elegir fecha">
-  <div class="pk-head"><button class="btn icon" data-pk="-1" aria-label="Anterior"><svg class="i" aria-hidden="true"><use href="#i-left"/></svg></button><button class="btn ghost pk-title" id="pkTitle"></button><button class="btn icon" data-pk="1" aria-label="Siguiente"><svg class="i" aria-hidden="true"><use href="#i-right"/></svg></button></div>
-  <div class="pk-grid" id="pkGrid"></div>
+  <div class="wheels"><div class="band"></div><div class="wheel" id="wD" aria-label="Día"></div><div class="wheel" id="wM" aria-label="Mes"></div><div class="wheel" id="wY" aria-label="Año"></div></div>
+  <div class="pk-foot"><button type="button" class="btn soft" id="pkToday">Hoy</button><button type="button" class="btn primary" id="pkOk">Listo</button></div>
 </div>
 
 <!-- Menú de cuenta -->
-<div class="menu hide" id="meMenu"><div class="muted" id="meName"></div><div class="fld">Tema<div class="seg chips sm theme" id="theme"><button data-v="auto" aria-pressed="true">Auto</button><button data-v="light">Claro</button><button data-v="dark">Oscuro</button><button data-v="black">Negro</button></div></div><button class="btn soft block" id="salir">Cerrar sesión</button></div>
+<div class="menu hide" id="meMenu"><div class="muted" id="meName"></div><button class="btn soft block" id="salir">Cerrar sesión</button></div>
 
 <div class="toasts" id="toasts" aria-live="polite"></div>
 
-<script type="module" src="js/app.js?v=20261016191450"></script>
+<script type="module" src="js/app.js?v=20261016193541"></script>
 </body>
 </html>

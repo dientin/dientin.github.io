@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#14112b">
+<title>Dientin App</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🦷</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap">
+<link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+
+<!-- Login -->
+<section id="login" class="login hide">
+  <div class="glass card-in">
+    <div class="logo-big">🦷</div>
+    <h1>Dientin App</h1>
+    <p class="muted">Turnos y pacientes del consultorio, en un solo lugar.</p>
+    <button class="btn primary block" id="gLogin"><svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true"><path fill="#fff" d="M44.5 20H24v8.5h11.8C34.7 33.9 30.1 37 24 37c-7.2 0-13-5.8-13-13s5.8-13 13-13c3.1 0 5.9 1.1 8.1 2.9l6.4-6.4C34.6 4.1 29.6 2 24 2 11.8 2 2 11.8 2 24s9.8 22 22 22c11 0 21-8 21-22 0-1.3-.2-2.7-.5-4z"/></svg>Ingresar con Google</button>
+    <p class="err" id="loginErr" role="alert"></p>
+  </div>
+</section>
+
+<!-- App -->
+<div id="app" class="hide">
+  <header class="top">
+    <div class="brand"><span class="logo">🦷</span><b>Dientin</b><span class="tagline">App</span></div>
+    <nav class="seg tabs" id="tabs" role="tablist">
+      <button data-v="agenda" aria-pressed="true">Agenda</button>
+      <button data-v="calendario" aria-pressed="false">Calendario</button>
+      <button data-v="pacientes" aria-pressed="false">Pacientes</button>
+    </nav>
+    <div class="me">
+      <button class="btn primary" id="nuevo"><span class="plus">+</span><span id="nuevoTxt">Nuevo turno</span></button>
+      <button class="avatar" id="meBtn" aria-label="Mi cuenta"></button>
+    </div>
+  </header>
+  <div class="banner" id="banner" hidden></div>
+
+  <main>
+    <!-- Agenda -->
+    <section id="v-agenda" class="view">
+      <div class="toolbar">
+        <div class="daynav">
+          <button class="btn icon" id="prev" aria-label="Día anterior">‹</button>
+          <button class="btn soft datebtn" id="fechaBtn"></button>
+          <button class="btn icon" id="next" aria-label="Día siguiente">›</button>
+          <button class="btn soft" id="hoy">Hoy</button>
+        </div>
+        <div class="search"><input type="search" id="buscar" placeholder="Buscar turnos por paciente o teléfono"></div>
+      </div>
+      <div class="stats" id="stats"></div>
+      <div id="vista" class="list"></div>
+    </section>
+
+    <!-- Calendario -->
+    <section id="v-calendario" class="view hide">
+      <div class="toolbar">
+        <div class="daynav">
+          <button class="btn icon" id="cprev" aria-label="Mes anterior">‹</button>
+          <div class="datebtn static" id="cmes"></div>
+          <button class="btn icon" id="cnext" aria-label="Mes siguiente">›</button>
+          <button class="btn soft" id="choy">Hoy</button>
+        </div>
+        <div class="seg chips" id="cfil">
+          <button data-v="todos" aria-pressed="true">Activos</button>
+          <button data-v="pendiente">Sin confirmar</button>
+          <button data-v="confirmado">Confirmados</button>
+          <button data-v="atendido">Atendidos</button>
+          <button data-v="cancelado">Cancelados</button>
+        </div>
+      </div>
+      <div class="stats" id="cstats"></div>
+      <div class="panel"><div class="cal" id="cgrid"></div></div>
+      <div id="cdet"></div>
+    </section>
+
+    <!-- Pacientes -->
+    <section id="v-pacientes" class="view hide">
+      <div class="toolbar">
+        <div class="seg chips" id="pfil"></div>
+        <div class="search"><input type="search" id="bp" placeholder="Buscar por nombre, teléfono, DNI u obra social"></div>
+      </div>
+      <div class="seg chips sm" id="bcob">
+        <button data-v="" aria-pressed="true">Toda cobertura</button>
+        <button data-v="particular">Particular</button>
+        <button data-v="obra social">Obra social</button>
+        <button data-v="prepaga">Prepaga</button>
+        <button data-v="-">Sin cargar</button>
+      </div>
+      <div id="plist" class="list"></div>
+    </section>
+  </main>
+</div>
+
+<!-- Turno -->
+<dialog id="dlg" class="sheet">
+  <form id="f">
+    <div class="sheet-head"><h2 id="dt">Nuevo turno</h2><button type="button" class="btn icon x" data-close aria-label="Cerrar">✕</button></div>
+    <div class="sheet-body">
+      <label class="fld">Paciente<input id="nombre" required autocomplete="off" list="plst" placeholder="Nombre y apellido"></label><datalist id="plst"></datalist>
+      <div class="row">
+        <label class="fld">Teléfono<input id="tel" inputmode="tel" placeholder="11 5555 1234"></label>
+        <label class="fld">DNI<input id="tdni" inputmode="numeric"></label>
+      </div>
+      <div class="fld">Cobertura<div class="seg chips sm" id="tcob">
+        <button type="button" data-v="" aria-pressed="true">Sin cargar</button><button type="button" data-v="particular">Particular</button><button type="button" data-v="obra social">Obra social</button><button type="button" data-v="prepaga">Prepaga</button>
+      </div></div>
+      <div class="row hide" id="tcobrow"><label class="fld">Nombre y plan<input id="tent" placeholder="Ej: OSDE 210, PAMI"></label><label class="fld">N.º de afiliado<input id="taf" inputmode="numeric"></label></div>
+      <div class="fld">Fecha<button type="button" class="btn soft datebtn wide" id="dia" data-date></button></div>
+      <div class="fld">Duración<div class="seg chips sm" id="dur">
+        <button type="button" data-v="30" aria-pressed="true">30 min</button><button type="button" data-v="60">1 h</button><button type="button" data-v="90">1 h 30</button><button type="button" data-v="120">2 h</button>
+      </div></div>
+      <div class="fld">Horario<div class="slots" id="hora"></div></div>
+      <div class="fld">Tratamiento<div class="seg chips sm" id="trat"></div></div>
+      <div class="fld">Estado<div class="seg chips sm states" id="est">
+        <button type="button" data-v="pendiente" aria-pressed="true">Pendiente</button><button type="button" data-v="confirmado">Confirmado</button><button type="button" data-v="atendido">Atendido</button><button type="button" data-v="cancelado">Cancelado</button>
+      </div></div>
+      <label class="fld">Notas<textarea id="notas" rows="2"></textarea></label>
+      <div id="aud" class="audit"></div>
+      <p class="err" id="err" role="alert"></p>
+    </div>
+    <div class="sheet-foot">
+      <button type="button" class="btn danger" id="del" hidden>Eliminar</button>
+      <button type="button" class="btn wa" id="wa" hidden>WhatsApp</button>
+      <span class="grow"></span>
+      <button type="button" class="btn soft" data-close>Cancelar</button>
+      <button type="submit" class="btn primary">Guardar turno</button>
+    </div>
+  </form>
+</dialog>
+
+<!-- Paciente -->
+<dialog id="dp" class="sheet">
+  <form id="fp">
+    <div class="sheet-head"><h2 id="dpt">Nuevo paciente</h2><button type="button" class="btn icon x" data-close aria-label="Cerrar">✕</button></div>
+    <div class="sheet-body">
+      <label class="fld">Nombre y apellido<input id="pn" required autocomplete="off"></label>
+      <div class="row">
+        <label class="fld">Teléfono<input id="pt" inputmode="tel"></label>
+        <label class="fld">DNI<input id="pdni" inputmode="numeric"></label>
+      </div>
+      <div class="row">
+        <div class="fld">Fecha de nacimiento<button type="button" class="btn soft datebtn wide" id="pfn" data-date data-empty="Elegir fecha"></button></div>
+        <label class="fld">Email<input type="email" id="pem"></label>
+      </div>
+      <div class="fld">Cobertura<div class="seg chips sm" id="pcob">
+        <button type="button" data-v="" aria-pressed="true">Sin cargar</button><button type="button" data-v="particular">Particular</button><button type="button" data-v="obra social">Obra social</button><button type="button" data-v="prepaga">Prepaga</button>
+      </div></div>
+      <div class="row hide" id="pcobrow"><label class="fld">Nombre y plan<input id="pent" placeholder="Ej: OSDE 210, PAMI"></label><label class="fld">N.º de afiliado<input id="paf" inputmode="numeric"></label></div>
+      <label class="fld">Motivo o notas<textarea id="pm" rows="2" placeholder="Ej: dolor de muela, control anual"></textarea></label>
+      <div class="fld" id="mediaBox">Fotos y videos
+        <div class="media" id="media"></div>
+        <label class="btn soft upload"><input type="file" id="mfile" accept="image/*,video/*" multiple hidden>Subir fotos o videos</label>
+        <div class="progress hide" id="mprog"><i></i></div>
+      </div>
+      <div id="paud" class="audit"></div>
+    </div>
+    <div class="sheet-foot">
+      <button type="button" class="btn danger" id="pdel" hidden>Eliminar</button>
+      <button type="button" class="btn soft" id="pturno" hidden>Dar turno</button>
+      <span class="grow"></span>
+      <button type="button" class="btn soft" data-close>Cancelar</button>
+      <button type="submit" class="btn primary">Guardar paciente</button>
+    </div>
+  </form>
+</dialog>
+
+<!-- Confirmación -->
+<dialog id="dask" class="sheet small">
+  <div class="sheet-body"><p id="askMsg"></p></div>
+  <div class="sheet-foot"><span class="grow"></span><button class="btn soft" id="askNo">Cancelar</button><button class="btn danger solid" id="askYes">Eliminar</button></div>
+</dialog>
+
+<!-- Selector de fecha (uno solo, se reubica) -->
+<div class="picker hide" id="picker" role="dialog" aria-label="Elegir fecha">
+  <div class="pk-head"><button class="btn icon" data-pk="-1" aria-label="Anterior">‹</button><button class="btn ghost pk-title" id="pkTitle"></button><button class="btn icon" data-pk="1" aria-label="Siguiente">›</button></div>
+  <div class="pk-grid" id="pkGrid"></div>
+</div>
+
+<!-- Menú de cuenta -->
+<div class="menu hide" id="meMenu"><div class="muted" id="meName"></div><button class="btn soft block" id="salir">Cerrar sesión</button></div>
+
+<div class="toasts" id="toasts" aria-live="polite"></div>
+
+<script type="module" src="js/app.js"></script>
+</body>
+</html>

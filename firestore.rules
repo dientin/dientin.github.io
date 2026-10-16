@@ -1,0 +1,14 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Solo las cuentas de Google de esta lista pueden leer y escribir. Agregá acá al equipo.
+    function staff() {
+      return request.auth != null
+        && request.auth.token.email_verified == true
+        && request.auth.token.email in ['mateoegonzalezar@gmail.com'];
+    }
+    match /{col}/{id} {
+      allow read, write: if staff() && col in ['turnos', 'pacientes'];
+    }
+  }
+}

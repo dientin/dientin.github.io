@@ -1,4 +1,5 @@
-import { firebaseConfig, cloudinary, agenda } from "./config.js";
+const VERSION = document.querySelector("meta[name=app-version]").content;
+const { firebaseConfig, cloudinary, agenda } = await import(`./config.js?v=${VERSION}`);
 
 const { start: START, end: END, step: STEP } = agenda;
 const TRATS = ["Consulta", "Limpieza", "Arreglo / caries", "Endodoncia", "Extracción", "Ortodoncia", "Blanqueamiento", "Implante", "Urgencia", "Otro"];
@@ -87,6 +88,7 @@ $("picker").addEventListener("click", e => {
   else if (b.dataset.d) { closePicker(); pk.cb(b.dataset.d); return; }
   drawPicker();
 });
+["scroll", "resize"].forEach(ev => addEventListener(ev, e => { if (!e.target.closest?.("#picker")) closePicker(); }, true));
 document.addEventListener("pointerdown", e => {
   if (!$("picker").classList.contains("hide") && !e.target.closest("#picker") && e.target !== pk.anchor) closePicker();
 });
@@ -403,10 +405,24 @@ const authErr = c => ({
   "auth/operation-not-allowed": "Este método de ingreso no está activado en Firebase.",
 }[c] || "No se pudo ingresar (" + c + ").");
 
+/* ---------- Versiones: avisa si hay una publicada más nueva ---------- */
+async function checkVersion() {
+  try {
+    const r = await fetch("version.json?t=" + Date.now(), { cache: "no-store" });
+    if ((await r.json()).v !== VERSION) $("update").classList.remove("hide");
+  } catch {}
+}
+$("updBtn").onclick = async () => {
+  try { await fetch("./", { cache: "reload" }); } catch {} // refresca el index.html cacheado por GitHub Pages
+  location.reload();
+};
+if (VERSION !== "0") { checkVersion(); setInterval(checkVersion, 5 * 60e3); }
+document.addEventListener("visibilitychange", () => { if (!document.hidden && VERSION !== "0") checkVersion(); });
+
 /* ---------- Arranque ---------- */
 if (!firebaseConfig.apiKey || location.search === "?demo") { // ?demo: prueba local sin tocar Firebase
   store = localStore();
-  $("banner").hidden = false; $("banner").textContent = "Modo demo: falta configurar Firebase en js/config.js. Los datos quedan solo en este navegador.";
+  $("banner").hidden = false; $("banner").textContent = "Modo demo: los datos quedan solo en este navegador.";
   startApp("Demo", "", true);
 } else {
   const FB = "https://www.gstatic.com/firebasejs/10.12.2/";

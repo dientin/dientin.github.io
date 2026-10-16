@@ -1,14 +1,32 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Solo las cuentas de Google de esta lista pueden leer y escribir. Agregá acá al equipo.
-    function staff() {
+    function isAdmin() {
       return request.auth != null
-        && request.auth.token.email_verified == true
-        && request.auth.token.email in ['mateoegonzalezar@gmail.com'];
+        && request.auth.token.email == 'dientinturnero@gmail.com'
+        && request.auth.token.email_verified == true;
     }
-    match /{col}/{id} {
-      allow read, write: if staff() && col in ['turnos', 'pacientes'];
+    // Staff = admin o cuenta registrada y aprobada por el admin
+    function staff() {
+      return isAdmin() || (request.auth != null
+        && exists(/databases/$(database)/documents/usuarios/$(request.auth.uid))
+        && get(/databases/$(database)/documents/usuarios/$(request.auth.uid)).data.aprobado == true);
+    }
+
+    match /usuarios/{uid} {
+      allow read: if isAdmin() || request.auth.uid == uid;
+      // cada uno crea su propio perfil, siempre sin aprobar
+      allow create: if request.auth != null && request.auth.uid == uid
+        && request.resource.data.aprobado == false
+        && request.resource.data.email == request.auth.token.email;
+      allow update, delete: if isAdmin();
+    }
+
+    match /turnos/{id} {
+      allow read, write: if staff();
+    }
+    match /pacientes/{id} {
+      allow read, write: if staff();
     }
   }
 }

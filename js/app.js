@@ -4,7 +4,8 @@ const { start: START, end: END, step: STEP } = agenda;
 const TRATS = ["Consulta", "Limpieza", "Arreglo / caries", "Endodoncia", "Extracción", "Ortodoncia", "Blanqueamiento", "Implante", "Urgencia", "Otro"];
 const cap = { pendiente: "Pendiente", confirmado: "Confirmado", atendido: "Atendido", cancelado: "Cancelado" };
 
-let turnos = [], pacientes = [], store = null, me = "", logout = () => {};
+const ADMIN = "dientinturnero@gmail.com";
+let turnos = [], pacientes = [], usuarios = [], store = null, me = "", logout = () => {};
 let current = iso(new Date()), editId = null, editP = null, filtro = "todos", view = "agenda";
 let calMes = monthOf(current), calSel = null;
 
@@ -127,7 +128,7 @@ function card(t, showDate, i = 0) {
   ${t.notas ? `<div class="sub">${esc(t.notas)}</div>` : ""}</button>`;
 }
 function render() {
-  if (view === "agenda") renderA(); else if (view === "calendario") renderC(); else renderP();
+  ({ agenda: renderA, calendario: renderC, pacientes: renderP, equipo: renderU })[view]();
   $("plst").innerHTML = pacientes.map(p => `<option value="${esc(p.nombre)}">`).join("");
 }
 function renderA() {
@@ -191,7 +192,7 @@ function renderP() {
 /* ---------- Navegación ---------- */
 function tab(v) {
   view = v; setSeg($("tabs"), v);
-  ["agenda", "calendario", "pacientes"].forEach(n => $("v-" + n).classList.toggle("hide", n !== v));
+  ["agenda", "calendario", "pacientes", "equipo"].forEach(n => $("v-" + n).classList.toggle("hide", n !== v));
   $("nuevoTxt").textContent = v === "pacientes" ? "Nuevo paciente" : "Nuevo turno";
   if (v === "calendario") { calMes = monthOf(current); calSel = current; }
   render();
@@ -351,24 +352,55 @@ $("meBtn").onclick = () => $("meMenu").classList.toggle("hide");
 document.addEventListener("pointerdown", e => { if (!e.target.closest("#meMenu,#meBtn")) $("meMenu").classList.add("hide"); });
 $("salir").onclick = () => logout();
 
-function startApp(name, photo) {
+/* ---------- Equipo (solo admin) ---------- */
+function renderU() {
+  const l = [...usuarios].sort((a, b) => (a.aprobado - b.aprobado) || (a.nombre || "").localeCompare(b.nombre || ""));
+  $("ulist").innerHTML = l.length ? l.map((u, i) => `<div class="urow" style="--i:${Math.min(i, 12)}"><div class="grow"><b>${esc(u.nombre || u.email)}</b><div class="sub">${esc(u.email)} · ${u.aprobado ? "Con acceso" : "Esperando aprobación"}</div></div>
+    ${u.aprobado ? `<button class="btn danger" data-uid="${u.id}" data-ok="0">Quitar acceso</button>` : `<button class="btn primary" data-uid="${u.id}" data-ok="1">Aprobar</button>`}</div>`).join("")
+    : `<p class="empty">Todavía nadie se registró.</p>`;
+}
+$("ulist").onclick = async e => {
+  const b = e.target.closest("[data-uid]"); if (!b) return;
+  const u = usuarios.find(x => x.id === b.dataset.uid), ok = b.dataset.ok === "1";
+  if (!ok && !await ask(`¿Quitarle el acceso a ${u.nombre || u.email}?`, "Quitar")) return;
+  try { await put("usuarios", { ...u, aprobado: ok }); } catch { return; }
+  toast(ok ? "Acceso aprobado ✓" : "Acceso quitado");
+};
+
+function startApp(name, photo, admin) {
   me = name;
+  $("tabEquipo").classList.toggle("hide", !admin);
+  if (admin) store.watch("usuarios", l => { usuarios = l; if (view === "equipo") renderU(); }, () => {});
   $("meName").textContent = name;
   $("meBtn").textContent = photo ? "" : name[0]?.toUpperCase() || "?";
   $("meBtn").style.backgroundImage = photo ? `url("${photo}")` : "";
-  $("login").classList.add("hide"); $("app").classList.remove("hide");
+  $("login").classList.add("hide"); $("app").classList.remove("hide"); $("meMenu").classList.add("hide");
   const onErr = e => { toast("Sin acceso a los datos (" + (e.code || "error") + ")", true); if (e.code === "permission-denied") logout("Esta cuenta no está autorizada en el consultorio."); };
   store.watch("turnos", l => { turnos = l; render(); if ($("dlg").open) renderSlots(); }, onErr);
   store.watch("pacientes", l => { pacientes = l; render(); if ($("dp").open) drawMedia(); }, onErr);
   tab("agenda");
 }
-function showLogin(msg = "") { $("app").classList.add("hide"); $("login").classList.remove("hide"); $("loginErr").textContent = msg; }
+function showLogin(msg = "", pending = false) {
+  $("app").classList.add("hide"); $("login").classList.remove("hide"); $("loginErr").textContent = msg;
+  $("login").querySelector(".glass:not(#pending)").classList.toggle("hide", pending); $("pending").classList.toggle("hide", !pending);
+}
+seg($("authMode"), m => {
+  $("nameFld").classList.toggle("hide", m === "in"); $("aName").required = m === "up";
+  $("aGo").textContent = m === "in" ? "Ingresar" : "Crear cuenta";
+  $("aPass").autocomplete = m === "in" ? "current-password" : "new-password"; $("loginErr").textContent = "";
+});
+const authErr = c => ({
+  "auth/invalid-credential": "Email o contraseña incorrectos.", "auth/wrong-password": "Email o contraseña incorrectos.", "auth/user-not-found": "Email o contraseña incorrectos.",
+  "auth/email-already-in-use": "Ya existe una cuenta con ese email. Ingresá o recuperá la contraseña.", "auth/weak-password": "La contraseña tiene que tener al menos 6 caracteres.",
+  "auth/invalid-email": "El email no es válido.", "auth/too-many-requests": "Demasiados intentos. Probá en unos minutos.",
+  "auth/operation-not-allowed": "Este método de ingreso no está activado en Firebase.",
+}[c] || "No se pudo ingresar (" + c + ").");
 
 /* ---------- Arranque ---------- */
 if (!firebaseConfig.apiKey) {
   store = localStore();
   $("banner").hidden = false; $("banner").textContent = "Modo demo: falta configurar Firebase en js/config.js. Los datos quedan solo en este navegador.";
-  startApp("Demo");
+  startApp("Demo", "", true);
 } else {
   const FB = "https://www.gstatic.com/firebasejs/10.12.2/";
   const [{ initializeApp }, A, F] = await Promise.all([import(FB + "firebase-app.js"), import(FB + "firebase-auth.js"), import(FB + "firebase-firestore.js")]);
@@ -380,7 +412,38 @@ if (!firebaseConfig.apiKey) {
     // shortcut: escucha colecciones completas; si pasan de unos miles de docs, filtrar por rango de fechas
     watch: (c, cb, err) => unsubs.push(F.onSnapshot(F.collection(db, c), s => cb(s.docs.map(d => ({ ...d.data(), id: d.id }))), err)),
   };
-  logout = msg => { unsubs.forEach(u => u()); unsubs = []; turnos = []; pacientes = []; A.signOut(auth); showLogin(msg); };
-  $("gLogin").onclick = () => A.signInWithPopup(auth, new A.GoogleAuthProvider()).catch(e => { if (e.code !== "auth/popup-closed-by-user") $("loginErr").textContent = "No se pudo ingresar (" + e.code + ")."; });
-  A.onAuthStateChanged(auth, u => u ? startApp(u.displayName || u.email, u.photoURL) : showLogin($("loginErr").textContent));
+  logout = msg => { unsubs.forEach(u => u()); unsubs = []; turnos = pacientes = usuarios = []; A.signOut(auth); showLogin(msg); };
+  $("pendOut").onclick = () => logout();
+  let regName = "";
+  const busy = on => { $("aGo").disabled = $("gLogin").disabled = on; };
+  $("authF").addEventListener("submit", async e => {
+    e.preventDefault(); $("loginErr").textContent = ""; busy(true);
+    const mail = $("aMail").value.trim(), pass = $("aPass").value;
+    try {
+      if (val($("authMode")) === "up") {
+        regName = $("aName").value.trim();
+        const c = await A.createUserWithEmailAndPassword(auth, mail, pass);
+        await A.updateProfile(c.user, { displayName: regName });
+      } else await A.signInWithEmailAndPassword(auth, mail, pass);
+    } catch (x) { $("loginErr").textContent = authErr(x.code); }
+    busy(false);
+  });
+  $("gLogin").onclick = () => A.signInWithPopup(auth, new A.GoogleAuthProvider()).catch(e => { if (e.code !== "auth/popup-closed-by-user") $("loginErr").textContent = authErr(e.code); });
+  $("aReset").onclick = async () => {
+    const mail = $("aMail").value.trim();
+    if (!mail) { $("loginErr").textContent = "Escribí tu email arriba y volvé a tocar acá."; return; }
+    try { await A.sendPasswordResetEmail(auth, mail); toast("Te mandamos un mail para cambiar la contraseña"); } catch (x) { $("loginErr").textContent = authErr(x.code); }
+  };
+  A.onAuthStateChanged(auth, async u => {
+    if (!u) return showLogin($("loginErr").textContent);
+    const name = u.displayName || regName || u.email;
+    if (u.email === ADMIN && u.emailVerified) return startApp(name, u.photoURL, true);
+    // el resto necesita un perfil en usuarios/{uid} aprobado por el admin
+    const ref = F.doc(db, "usuarios", u.uid);
+    try {
+      const s = await F.getDoc(ref);
+      if (!s.exists()) await F.setDoc(ref, { nombre: name, email: u.email, aprobado: false, creAt: new Date().toISOString() });
+      if (s.data()?.aprobado) startApp(name, u.photoURL, false); else showLogin("", true);
+    } catch (x) { showLogin("No se pudo verificar tu cuenta (" + x.code + ")."); }
+  });
 }

@@ -389,7 +389,7 @@ function startApp(name, photo, admin) {
 }
 function showLogin(msg = "", pending = false) {
   $("app").classList.add("hide"); $("login").classList.remove("hide"); $("loginErr").textContent = msg;
-  $("login").querySelector(".glass:not(#pending)").classList.toggle("hide", pending); $("pending").classList.toggle("hide", !pending);
+  $("authCard").classList.toggle("hide", pending); $("pending").classList.toggle("hide", !pending);
 }
 seg($("authMode"), m => {
   $("nameFld").classList.toggle("hide", m === "in"); $("aName").required = m === "up";

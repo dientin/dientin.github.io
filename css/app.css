@@ -52,7 +52,7 @@ button{cursor:pointer}
 .btn.icon{width:40px;height:40px;padding:0;background:var(--surface);border-color:var(--line);font-size:1.3rem;line-height:1}
 .btn.icon:hover{border-color:var(--brand);color:var(--brand)}
 .btn.block{width:100%}
-.btn .plus{font-size:1.2rem;line-height:1;transition:transform .3s var(--ease)}
+.btn .plus{transition:transform .3s var(--ease)}
 .btn:hover .plus{transform:rotate(90deg)}
 .ripple{position:absolute;border-radius:50%;background:currentColor;opacity:.25;transform:scale(0);animation:ripple .55s var(--ease) forwards;pointer-events:none}
 @keyframes ripple{to{transform:scale(1);opacity:0}}
@@ -79,7 +79,7 @@ button{cursor:pointer}
 .login-side p{opacity:.85;margin:0;max-width:400px}
 .login-side ul{list-style:none;padding:0;margin:28px 0 0;display:grid;gap:12px}
 .login-side li{display:flex;gap:10px;align-items:center;font-weight:500}
-.login-side li::before{content:"✓";display:grid;place-items:center;width:22px;height:22px;border-radius:50%;background:rgba(255,255,255,.18);font-size:.75rem;flex:none}
+.login-side li::before{content:"";width:22px;height:22px;border-radius:50%;flex:none;background:rgba(255,255,255,.18) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6 9 17l-5-5'/%3E%3C/svg%3E") center/12px no-repeat}
 .login-side .brand{color:#fff}.login-side .logo{background:rgba(255,255,255,.18)}
 .login-main{display:grid;place-items:center;padding:24px 16px}
 .authcard{width:min(380px,100%)}
@@ -283,3 +283,12 @@ dialog form{display:flex;flex-direction:column;max-height:inherit}
 .theme{display:grid;grid-template-columns:repeat(4,1fr)}
 .theme button{padding:7px 0;font-size:.78rem}
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+
+/* ---------- Iconos SVG ---------- */
+.i{width:20px;height:20px;flex:none;display:block}
+.btn.x .i{width:18px;height:18px}
+.logo .i{width:20px;height:20px;color:#fff}
+.pend-ico .i{width:24px;height:24px}
+.thumb button .i{width:12px;height:12px;margin:auto}
+.toast{display:flex;align-items:center;gap:10px}
+.toast .i{width:18px;height:18px}

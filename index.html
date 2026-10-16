@@ -5,18 +5,44 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#ffffff">
 <title>Dientin App</title>
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🦷</text></svg>">
+<meta name="description" content="Turnos y pacientes del consultorio odontológico, desde la compu o el celular.">
+<link rel="icon" href="img/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="img/icon-192.png" type="image/png" sizes="192x192">
+<link rel="apple-touch-icon" href="img/apple-touch-icon.png">
+<link rel="manifest" href="site.webmanifest">
+<meta name="apple-mobile-web-app-title" content="Dientin">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Dientin App">
+<meta property="og:title" content="Dientin App">
+<meta property="og:description" content="Turnos y pacientes del consultorio odontológico, desde la compu o el celular.">
+<meta property="og:url" content="https://dientin.github.io/">
+<meta property="og:image" content="https://dientin.github.io/img/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Dientin App">
+<meta property="og:locale" content="es_AR">
+<meta name="twitter:card" content="summary_large_image">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
 <link rel="stylesheet" href="css/app.css">
 <script>try{const t=localStorage.getItem("dientin-theme");if(t&&t!=="auto")document.documentElement.dataset.theme=t}catch(e){}</script>
 </head>
 <body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-tooth" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M7 3C4.5 3 3 5 3 7.5c0 2 .8 3.4 1.5 5 .7 1.7.8 4 1.3 6 .4 1.6 1 2.5 1.9 2.5 1.2 0 1.5-1.6 1.8-3.3.3-1.6.6-3.2 2.5-3.2s2.2 1.6 2.5 3.2c.3 1.7.6 3.3 1.8 3.3.9 0 1.5-.9 1.9-2.5.5-2 .6-4.3 1.3-6 .7-1.6 1.5-3 1.5-5C21 5 19.5 3 17 3c-2 0-3 1-5 1S9 3 7 3z"/></symbol>
+  <symbol id="i-left" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></symbol>
+  <symbol id="i-right" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="i-hourglass" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2h12M6 22h12M7 2v4a5 5 0 0 0 10 0V2M7 22v-4a5 5 0 0 1 10 0v4"/></symbol>
+  <symbol id="i-alert" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v4M12 16h.01"/></symbol>
+</svg>
 
 <!-- Login -->
 <section id="login" class="login hide">
   <aside class="login-side">
-    <div class="brand"><span class="logo">🦷</span><b>Dientin</b><span>App</span></div>
+    <div class="brand"><span class="logo"><svg class="i" aria-hidden="true"><use href="#i-tooth"/></svg></span><b>Dientin</b><span>App</span></div>
     <div>
       <h2>La agenda de tu consultorio, simple y ordenada.</h2>
       <p>Turnos, pacientes y fichas en un solo lugar, desde la compu o el celular.</p>
@@ -41,7 +67,7 @@
       <p class="err" id="loginErr" role="alert"></p>
     </div>
     <div class="authcard card-in hide" id="pending">
-      <div class="pend-ico">⏳</div>
+      <div class="pend-ico"><svg class="i" aria-hidden="true"><use href="#i-hourglass"/></svg></div>
       <h1>Cuenta creada</h1>
       <p class="muted">Un administrador tiene que aprobar tu acceso. Volvé a entrar cuando te avisen.</p>
       <button class="btn soft block" id="pendOut">Cerrar sesión</button>
@@ -52,7 +78,7 @@
 <!-- App -->
 <div id="app" class="hide">
   <header class="top">
-    <div class="brand"><span class="logo">🦷</span><b>Dientin</b><span class="tagline">App</span></div>
+    <div class="brand"><span class="logo"><svg class="i" aria-hidden="true"><use href="#i-tooth"/></svg></span><b>Dientin</b><span class="tagline">App</span></div>
     <nav class="seg tabs" id="tabs" role="tablist">
       <button data-v="agenda" aria-pressed="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><span>Agenda</span></button>
       <button data-v="calendario" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10h18M8 3v4M16 3v4"/></svg><span>Calendario</span></button>
@@ -60,7 +86,7 @@
       <button data-v="equipo" aria-pressed="false" class="hide" id="tabEquipo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l8 4v5c0 5-3.5 8-8 9-4.5-1-8-4-8-9V7z"/><path d="m9 12 2 2 4-4"/></svg><span>Equipo</span></button>
     </nav>
     <div class="me">
-      <button class="btn primary" id="nuevo"><span class="plus">+</span><span id="nuevoTxt">Nuevo turno</span></button>
+      <button class="btn primary" id="nuevo"><svg class="i plus" aria-hidden="true"><use href="#i-plus"/></svg><span id="nuevoTxt">Nuevo turno</span></button>
       <button class="avatar" id="meBtn" aria-label="Mi cuenta"></button>
     </div>
   </header>
@@ -71,9 +97,9 @@
     <section id="v-agenda" class="view">
       <div class="toolbar">
         <div class="daynav">
-          <button class="btn icon" id="prev" aria-label="Día anterior">‹</button>
+          <button class="btn icon" id="prev" aria-label="Día anterior"><svg class="i" aria-hidden="true"><use href="#i-left"/></svg></button>
           <button class="btn soft datebtn" id="fechaBtn"></button>
-          <button class="btn icon" id="next" aria-label="Día siguiente">›</button>
+          <button class="btn icon" id="next" aria-label="Día siguiente"><svg class="i" aria-hidden="true"><use href="#i-right"/></svg></button>
           <button class="btn soft" id="hoy">Hoy</button>
         </div>
         <div class="search"><input type="search" id="buscar" placeholder="Buscar turnos por paciente o teléfono"></div>
@@ -86,9 +112,9 @@
     <section id="v-calendario" class="view hide">
       <div class="toolbar">
         <div class="daynav">
-          <button class="btn icon" id="cprev" aria-label="Mes anterior">‹</button>
+          <button class="btn icon" id="cprev" aria-label="Mes anterior"><svg class="i" aria-hidden="true"><use href="#i-left"/></svg></button>
           <div class="datebtn static" id="cmes"></div>
-          <button class="btn icon" id="cnext" aria-label="Mes siguiente">›</button>
+          <button class="btn icon" id="cnext" aria-label="Mes siguiente"><svg class="i" aria-hidden="true"><use href="#i-right"/></svg></button>
           <button class="btn soft" id="choy">Hoy</button>
         </div>
         <div class="seg chips" id="cfil">
@@ -131,7 +157,7 @@
 <!-- Turno -->
 <dialog id="dlg" class="sheet">
   <form id="f">
-    <div class="sheet-head"><h2 id="dt">Nuevo turno</h2><button type="button" class="btn icon x" data-close aria-label="Cerrar">✕</button></div>
+    <div class="sheet-head"><h2 id="dt">Nuevo turno</h2><button type="button" class="btn icon x" data-close aria-label="Cerrar"><svg class="i" aria-hidden="true"><use href="#i-x"/></svg></button></div>
     <div class="sheet-body">
       <label class="fld">Paciente<input id="nombre" required autocomplete="off" list="plst" placeholder="Nombre y apellido"></label><datalist id="plst"></datalist>
       <div class="row">
@@ -168,7 +194,7 @@
 <!-- Paciente -->
 <dialog id="dp" class="sheet">
   <form id="fp">
-    <div class="sheet-head"><h2 id="dpt">Nuevo paciente</h2><button type="button" class="btn icon x" data-close aria-label="Cerrar">✕</button></div>
+    <div class="sheet-head"><h2 id="dpt">Nuevo paciente</h2><button type="button" class="btn icon x" data-close aria-label="Cerrar"><svg class="i" aria-hidden="true"><use href="#i-x"/></svg></button></div>
     <div class="sheet-body">
       <label class="fld">Nombre y apellido<input id="pn" required autocomplete="off"></label>
       <div class="row">
@@ -209,7 +235,7 @@
 
 <!-- Selector de fecha (uno solo, se reubica) -->
 <div class="picker hide" id="picker" role="dialog" aria-label="Elegir fecha">
-  <div class="pk-head"><button class="btn icon" data-pk="-1" aria-label="Anterior">‹</button><button class="btn ghost pk-title" id="pkTitle"></button><button class="btn icon" data-pk="1" aria-label="Siguiente">›</button></div>
+  <div class="pk-head"><button class="btn icon" data-pk="-1" aria-label="Anterior"><svg class="i" aria-hidden="true"><use href="#i-left"/></svg></button><button class="btn ghost pk-title" id="pkTitle"></button><button class="btn icon" data-pk="1" aria-label="Siguiente"><svg class="i" aria-hidden="true"><use href="#i-right"/></svg></button></div>
   <div class="pk-grid" id="pkGrid"></div>
 </div>
 

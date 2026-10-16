@@ -24,7 +24,7 @@ const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 
 /* ---------- UI base: toasts, ripple, diálogos, confirmación ---------- */
 function toast(msg, bad) {
   const t = document.createElement("div");
-  t.className = "toast" + (bad ? " bad" : ""); t.textContent = msg; $("toasts").append(t);
+  t.className = "toast" + (bad ? " bad" : ""); t.innerHTML = `<svg class="i" aria-hidden="true"><use href="#i-${bad ? "alert" : "check"}"/></svg>`; t.append(msg); $("toasts").append(t);
   setTimeout(() => { t.classList.add("out"); setTimeout(() => t.remove(), 300); }, 2600);
 }
 document.addEventListener("pointerdown", e => {
@@ -272,7 +272,7 @@ $("f").addEventListener("submit", async e => {
     else if (Object.keys(d).some(k => (d[k] || "") !== (p[k] || ""))) await put("pacientes", { ...p, ...d, ...stamp(p) });
     t.pid = p.id; await put("turnos", t);
   } catch { return; }
-  current = t.dia; closeDlg($("dlg")); toast(editId ? "Turno actualizado" : "Turno agendado ✓"); render();
+  current = t.dia; closeDlg($("dlg")); toast(editId ? "Turno actualizado" : "Turno agendado"); render();
 });
 $("del").onclick = async () => { if (await ask("¿Eliminar este turno?")) { try { await drop("turnos", editId); } catch { return; } closeDlg($("dlg")); toast("Turno eliminado"); render(); } };
 $("wa").onclick = () => {
@@ -299,7 +299,7 @@ $("fp").addEventListener("submit", async e => {
   const prev = pacientes.find(x => x.id === editP) || {}, cob = val($("pcob")), x = cob === "obra social" || cob === "prepaga";
   const p = { media: [], ...prev, id: editP || "p" + uid(), nombre: $("pn").value.trim(), tel: $("pt").value.trim(), motivo: $("pm").value.trim(), dni: $("pdni").value.trim(), fnac: $("pfn").dataset.value, email: $("pem").value.trim(), cob, ent: x ? $("pent").value.trim() : "", afil: x ? $("paf").value.trim() : "", ...stamp(prev) };
   try { await put("pacientes", p); } catch { return; }
-  closeDlg($("dp")); toast(editP ? "Paciente actualizado" : "Paciente guardado ✓"); render();
+  closeDlg($("dp")); toast(editP ? "Paciente actualizado" : "Paciente guardado"); render();
 });
 $("pdel").onclick = async () => { if (await ask("¿Eliminar este paciente? Sus turnos no se borran.")) { try { await drop("pacientes", editP); } catch { return; } closeDlg($("dp")); toast("Paciente eliminado"); render(); } };
 $("pturno").onclick = () => { const p = pacientes.find(x => x.id === editP); closeDlg($("dp")); tab("agenda"); setTimeout(() => { open(null); $("nombre").value = p.nombre; fillFromPatient(); }, 200); };
@@ -310,7 +310,7 @@ function drawMedia() {
   const p = pacientes.find(x => x.id === editP), list = p?.media || [];
   const ready = cloudinary.cloudName && cloudinary.uploadPreset;
   $("mediaBox").classList.toggle("hide", !p || !ready); // se sube sobre un paciente ya guardado
-  $("media").innerHTML = list.map((m, i) => `<div class="thumb"><a href="${esc(m.url)}" target="_blank" rel="noopener">${m.type === "video" ? `<video src="${esc(m.url)}" preload="metadata" muted></video>` : `<img src="${esc(thumbUrl(m))}" alt="Foto ${i + 1}" loading="lazy">`}</a><button type="button" data-rm="${i}" aria-label="Quitar">✕</button></div>`).join("");
+  $("media").innerHTML = list.map((m, i) => `<div class="thumb"><a href="${esc(m.url)}" target="_blank" rel="noopener">${m.type === "video" ? `<video src="${esc(m.url)}" preload="metadata" muted></video>` : `<img src="${esc(thumbUrl(m))}" alt="Foto ${i + 1}" loading="lazy">`}</a><button type="button" data-rm="${i}" aria-label="Quitar"><svg class="i" aria-hidden="true"><use href="#i-x"/></svg></button></div>`).join("");
 }
 function upload(file, onp) {
   return new Promise((ok, ko) => {
@@ -336,7 +336,7 @@ $("mfile").onchange = async e => {
   bar.classList.add("hide"); bar.firstChild.style.width = "0";
   const p = pacientes.find(x => x.id === editP); if (!p || !nuevos.length) return;
   try { await put("pacientes", { ...p, media: [...(p.media || []), ...nuevos], ...stamp(p) }); } catch { return; }
-  toast(nuevos.length + " archivo(s) subido(s) ✓"); drawMedia();
+  toast(nuevos.length + " archivo(s) subido(s)"); drawMedia();
 };
 $("media").onclick = async e => {
   const b = e.target.closest("[data-rm]"); if (!b) return;
@@ -371,7 +371,7 @@ $("ulist").onclick = async e => {
   const u = usuarios.find(x => x.id === b.dataset.uid), ok = b.dataset.ok === "1";
   if (!ok && !await ask(`¿Quitarle el acceso a ${u.nombre || u.email}?`, "Quitar")) return;
   try { await put("usuarios", { ...u, aprobado: ok }); } catch { return; }
-  toast(ok ? "Acceso aprobado ✓" : "Acceso quitado");
+  toast(ok ? "Acceso aprobado" : "Acceso quitado");
 };
 
 function startApp(name, photo, admin) {

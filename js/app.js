@@ -351,6 +351,13 @@ $("media").onclick = async e => {
 $("meBtn").onclick = () => $("meMenu").classList.toggle("hide");
 document.addEventListener("pointerdown", e => { if (!e.target.closest("#meMenu,#meBtn")) $("meMenu").classList.add("hide"); });
 $("salir").onclick = () => logout();
+function applyTheme(t) {
+  if (t === "auto") delete document.documentElement.dataset.theme; else document.documentElement.dataset.theme = t;
+  document.querySelector("meta[name=theme-color]").content = getComputedStyle(document.body).backgroundColor;
+  try { localStorage.setItem("dientin-theme", t); } catch {}
+}
+setSeg($("theme"), document.documentElement.dataset.theme || "auto");
+seg($("theme"), applyTheme);
 
 /* ---------- Equipo (solo admin) ---------- */
 function renderU() {
@@ -397,7 +404,7 @@ const authErr = c => ({
 }[c] || "No se pudo ingresar (" + c + ").");
 
 /* ---------- Arranque ---------- */
-if (!firebaseConfig.apiKey) {
+if (!firebaseConfig.apiKey || location.search === "?demo") { // ?demo: prueba local sin tocar Firebase
   store = localStore();
   $("banner").hidden = false; $("banner").textContent = "Modo demo: falta configurar Firebase en js/config.js. Los datos quedan solo en este navegador.";
   startApp("Demo", "", true);

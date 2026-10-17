@@ -27,8 +27,8 @@
 <meta name="twitter:card" content="summary_large_image">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
-<meta name="app-version" content="20261016193541">
-<link rel="stylesheet" href="css/app.css?v=20261016193541">
+<meta name="app-version" content="20261016210359">
+<link rel="stylesheet" href="css/app.css?v=20261016210359">
 <script>try{const t=localStorage.getItem("dientin-theme");if(t==="light"||t==="dark")document.documentElement.dataset.theme=t}catch(e){}</script>
 </head>
 <body>
@@ -112,7 +112,7 @@
           <button class="btn icon" id="next" aria-label="Día siguiente"><svg class="i" aria-hidden="true"><use href="#i-right"/></svg></button>
           <button class="btn soft" id="hoy">Hoy</button>
         </div>
-        <div class="search"><input type="search" id="buscar" placeholder="Buscar turnos por paciente o teléfono"></div>
+        <div class="search"><input type="search" id="buscar" placeholder="Buscar turnos por paciente, ficha o teléfono"></div>
       </div>
       <div class="stats" id="stats"></div>
       <div id="vista" class="list"></div>
@@ -144,7 +144,7 @@
     <section id="v-pacientes" class="view hide">
       <div class="toolbar">
         <div class="seg chips" id="pfil"></div>
-        <div class="search"><input type="search" id="bp" placeholder="Buscar por nombre, teléfono, DNI u obra social"></div>
+        <div class="search"><input type="search" id="bp" placeholder="Buscar por nombre, ficha, teléfono, DNI u obra social"></div>
       </div>
       <div class="seg chips sm" id="bcob">
         <button data-v="" aria-pressed="true"><span class="t-lg">Toda cobertura</span><span class="t-sm">Todas</span></button>
@@ -171,16 +171,17 @@
     <div class="sheet-body">
       <label class="fld">Paciente<input id="nombre" required autocomplete="off" list="plst" placeholder="Nombre y apellido"></label><datalist id="plst"></datalist>
       <div class="row">
-        <label class="fld">Teléfono<input id="tel" inputmode="tel" placeholder="11 5555 1234"></label>
+        <label class="fld">N° de ficha<input id="tficha" autocomplete="off"></label>
         <label class="fld">DNI<input id="tdni" inputmode="numeric"></label>
       </div>
+      <label class="fld">Teléfono<input id="tel" inputmode="tel" placeholder="11 5555 1234"></label>
       <div class="fld">Cobertura<div class="seg chips sm" id="tcob">
         <button type="button" data-v="" aria-pressed="true">Sin cargar</button><button type="button" data-v="particular">Particular</button><button type="button" data-v="obra social">Obra social</button><button type="button" data-v="prepaga">Prepaga</button>
       </div></div>
       <div class="row hide" id="tcobrow"><label class="fld">Nombre y plan<input id="tent" placeholder="Ej: OSDE 210, PAMI"></label><label class="fld">N.º de afiliado<input id="taf" inputmode="numeric"></label></div>
       <div class="fld">Fecha<button type="button" class="btn soft datebtn wide" id="dia" data-date></button></div>
       <div class="fld">Duración<div class="seg chips sm" id="dur">
-        <button type="button" data-v="30" aria-pressed="true">30 min</button><button type="button" data-v="60">1 h</button><button type="button" data-v="90">1 h 30</button><button type="button" data-v="120">2 h</button>
+        <button type="button" data-v="15" aria-pressed="true">15 min</button><button type="button" data-v="30">30 min</button><button type="button" data-v="45">45 min</button><button type="button" data-v="60">1 h</button>
       </div></div>
       <div class="fld">Horario<div class="slots" id="hora"></div></div>
       <div class="fld">Tratamiento<div class="seg chips sm" id="trat"></div></div>
@@ -208,13 +209,14 @@
     <div class="sheet-body">
       <label class="fld">Nombre y apellido<input id="pn" required autocomplete="off"></label>
       <div class="row">
-        <label class="fld">Teléfono<input id="pt" inputmode="tel"></label>
+        <label class="fld">N° de ficha<input id="pficha" autocomplete="off"></label>
         <label class="fld">DNI<input id="pdni" inputmode="numeric"></label>
       </div>
       <div class="row">
-        <div class="fld">Fecha de nacimiento<button type="button" class="btn soft datebtn wide" id="pfn" data-date data-empty="Elegir fecha"></button></div>
+        <label class="fld">Teléfono<input id="pt" inputmode="tel"></label>
         <label class="fld">Email<input type="email" id="pem"></label>
       </div>
+      <div class="fld">Fecha de nacimiento<button type="button" class="btn soft datebtn wide" id="pfn" data-date data-empty="Elegir fecha"></button></div>
       <div class="fld">Cobertura<div class="seg chips sm" id="pcob">
         <button type="button" data-v="" aria-pressed="true">Sin cargar</button><button type="button" data-v="particular">Particular</button><button type="button" data-v="obra social">Obra social</button><button type="button" data-v="prepaga">Prepaga</button>
       </div></div>
@@ -254,6 +256,6 @@
 
 <div class="toasts" id="toasts" aria-live="polite"></div>
 
-<script type="module" src="js/app.js?v=20261016193541"></script>
+<script type="module" src="js/app.js?v=20261016210359"></script>
 </body>
 </html>

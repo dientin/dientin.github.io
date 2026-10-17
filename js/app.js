@@ -1,7 +1,7 @@
 const VERSION = document.querySelector("meta[name=app-version]").content;
 const { firebaseConfig, cloudinary, agenda } = await import(`./config.js?v=${VERSION}`);
 
-const { start: START, end: END, step: STEP } = agenda;
+const { start: START, end: END, step: STEP, cupo: CUPO } = agenda;
 const TRATS = ["Consulta", "Limpieza", "Arreglo / caries", "Endodoncia", "Extracción", "Ortodoncia", "Blanqueamiento", "Implante", "Urgencia", "Otro"];
 const cap = { pendiente: "Pendiente", confirmado: "Confirmado", atendido: "Atendido", cancelado: "Cancelado" };
 
@@ -122,17 +122,24 @@ function audit(t) {
   return `Cargó <b>${esc(t.cre)}</b> (${fh(t.creAt)})` + (t.modAt !== t.creAt ? ` · Modificó <b>${esc(t.mod)}</b> (${fh(t.modAt)})` : "");
 }
 const activo = t => t.est !== "cancelado";
-const choca = (t, x) => x.id !== t.id && x.dia === t.dia && activo(x) && mins(x.hora) < mins(t.hora) + t.dur && mins(x.hora) + x.dur > mins(t.hora);
+// turnos activos (sin contar t) que ocupan el minuto m de ese día
+const enMinuto = (t, m) => turnos.filter(x => x.id !== t.id && x.dia === t.dia && activo(x) && mins(x.hora) <= m && mins(x.hora) + x.dur > m);
+// devuelve los turnos que llenan el cupo en algún tramo de t, o null si entra
+function lleno(t) {
+  for (let m = mins(t.hora); m < mins(t.hora) + t.dur; m += STEP) { const o = enMinuto(t, m); if (o.length >= CUPO) return o; }
+  return null;
+}
 const turnoFuturo = p => turnos.filter(t => t.pid === p.id && (t.est === "pendiente" || t.est === "confirmado") && t.dia >= hoyISO()).sort((a, b) => (a.dia + a.hora).localeCompare(b.dia + b.hora))[0];
 const ultimo = p => turnos.filter(t => t.pid === p.id && t.est === "atendido").sort((a, b) => (b.dia + b.hora).localeCompare(a.dia + a.hora))[0];
 const cobTxt = p => !p.cob ? "Cobertura sin cargar" : p.cob === "particular" ? "Particular" : (p.cob === "prepaga" ? "Prepaga" : "Obra social") + (p.ent ? " " + esc(p.ent) : "") + (p.afil ? " · afiliado " + esc(p.afil) : "");
+const fichaDe = t => { const f = pacientes.find(x => x.id === t.pid)?.ficha; return f ? " · Ficha " + esc(f) : ""; };
 function cobCorta(t) { const p = pacientes.find(x => x.id === t.pid); return p?.cob ? " · " + (p.cob === "particular" ? "Particular" : esc(p.ent || (p.cob === "prepaga" ? "Prepaga" : "Obra social"))) : ""; }
 
 /* ---------- Render ---------- */
 const stat = (n, txt, c = "") => `<div class="stat ${c}"><b>${n}</b><span>${txt}</span></div>`;
 function card(t, showDate, i = 0) {
   return `<button class="appt s-${t.est}" data-id="${t.id}" style="--i:${Math.min(i, 12)}"><div class="top-row"><span class="name">${esc(t.nombre)}</span><span class="tag">${cap[t.est]}</span></div>
-  <div class="sub">${showDate ? fd(t.dia) + " · " : ""}${t.hora} · ${esc(t.trat)} · ${t.dur} min${t.tel ? " · " + esc(t.tel) : ""}${cobCorta(t)}</div>
+  <div class="sub">${showDate ? fd(t.dia) + " · " : ""}${t.hora} · ${esc(t.trat)} · ${t.dur} min${fichaDe(t)}${t.tel ? " · " + esc(t.tel) : ""}${cobCorta(t)}</div>
   ${t.notas ? `<div class="sub">${esc(t.notas)}</div>` : ""}</button>`;
 }
 function render() {
@@ -143,7 +150,7 @@ function renderA() {
   $("fechaBtn").textContent = (narrow.matches ? corto : largo)(current) + (current === hoyISO() ? " · hoy" : "");
   const q = $("buscar").value.trim().toLowerCase(), v = $("vista");
   if (q) {
-    const r = turnos.filter(t => (t.nombre + " " + (t.tel || "")).toLowerCase().includes(q)).sort((a, b) => (b.dia + b.hora).localeCompare(a.dia + a.hora));
+    const r = turnos.filter(t => (t.nombre + " " + (t.tel || "") + " " + (pacientes.find(x => x.id === t.pid)?.ficha || "")).toLowerCase().includes(q)).sort((a, b) => (b.dia + b.hora).localeCompare(a.dia + a.hora));
     $("stats").innerHTML = "";
     v.innerHTML = r.length ? r.map((t, i) => card(t, true, i)).join("") : `<p class="empty">No hay turnos para esa búsqueda.</p>`;
     return;
@@ -152,10 +159,11 @@ function renderA() {
   $("stats").innerHTML = stat(act.length, "turnos") + stat(del.filter(t => t.est === "confirmado").length, "confirmados", "c-conf") + stat(del.filter(t => t.est === "pendiente").length, "sin confirmar", "c-pend") + stat(del.filter(t => t.est === "atendido").length, "atendidos", "c-done");
   let html = "", i = 0;
   for (let m = START; m < END; m += STEP) {
-    if (act.some(x => mins(x.hora) < m && mins(x.hora) + x.dur > m)) continue;
     const here = del.filter(x => mins(x.hora) >= m && mins(x.hora) < m + STEP);
-    const libre = !here.some(activo);
-    html += `<div class="slot" style="--i:${Math.min(i++, 12)}"><div class="time">${hhmm(m)}</div><div>${here.map(t => card(t)).join("")}${libre ? `<button class="free" data-new="${hhmm(m)}">Libre · tocá para agendar</button>` : ""}</div></div>`;
+    const lugares = CUPO - enMinuto({ dia: current }, m).length;
+    const free = lugares > 0 ? `<button class="free" data-new="${hhmm(m)}">Libre · ${lugares === 1 ? "1 lugar" : lugares + " lugares"}</button>` : "";
+    const sigue = act.filter(x => mins(x.hora) < m && mins(x.hora) + x.dur > m).map(x => `<div class="cont">Sigue ${esc(x.nombre)}</div>`).join("");
+    html += `<div class="slot" style="--i:${Math.min(i++, 12)}"><div class="time">${hhmm(m)}</div><div class="slot-body">${here.map(t => card(t)).join("")}${sigue}${free}</div></div>`;
   }
   const fuera = del.filter(t => mins(t.hora) < START || mins(t.hora) >= END);
   if (fuera.length) html += `<p class="section-t">Fuera del horario habitual</p>` + fuera.map(t => card(t)).join("");
@@ -186,14 +194,14 @@ function renderP() {
   $("pfil").querySelectorAll("[data-n]").forEach(s => s.textContent = { todos: pacientes, con, sin }[s.dataset.n].length);
   const q = $("bp").value.trim().toLowerCase(), cob = val($("bcob"));
   const l = (filtro === "con" ? con : filtro === "sin" ? sin : pacientes)
-    .filter(p => [p.nombre, p.tel, p.dni, p.ent, p.afil].join(" ").toLowerCase().includes(q))
+    .filter(p => [p.nombre, p.ficha, p.tel, p.dni, p.ent, p.afil].join(" ").toLowerCase().includes(q))
     .filter(p => !cob || (cob === "-" ? !p.cob : p.cob === cob))
     .sort((a, b) => a.nombre.localeCompare(b.nombre));
   $("plist").innerHTML = l.length ? l.map((p, i) => {
     const t = turnoFuturo(p), u = ultimo(p);
     return `<button class="appt pac ${t ? "con" : "sin"}" data-pid="${p.id}" style="--i:${Math.min(i, 12)}"><div class="top-row"><span>${esc(p.nombre)}</span><span class="tag">${t ? "Con turno" : "Sin turno"}</span></div>
     <div class="sub">${t ? "Próximo: " + fd(t.dia) + " " + t.hora + " · " + esc(t.trat) : "Todavía no tiene turno"}${u ? " · Última visita: " + fd(u.dia) : ""}</div>
-    <div class="sub">${cobTxt(p)} · ${esc(p.tel || "Sin teléfono")}${p.media?.length ? " · " + p.media.length + " archivos" : ""}${p.motivo ? " · " + esc(p.motivo) : ""}</div></button>`;
+    <div class="sub">${p.ficha ? "Ficha " + esc(p.ficha) + " · " : ""}${cobTxt(p)} · ${esc(p.tel || "Sin teléfono")}${p.media?.length ? " · " + p.media.length + " archivos" : ""}${p.motivo ? " · " + esc(p.motivo) : ""}</div></button>`;
   }).join("") : `<p class="empty">No hay pacientes en esta lista. Agregá uno con “Nuevo paciente”.</p>`;
 }
 
@@ -243,17 +251,17 @@ function renderSlots() {
   const hs = []; for (let m = START; m + dur <= END; m += STEP) hs.push(hhmm(m));
   if (sel && !hs.includes(sel)) hs.push(sel), hs.sort();
   $("hora").innerHTML = hs.map(h => {
-    const busy = turnos.some(x => choca({ id: editId, dia, hora: h, dur }, x));
+    const busy = !!lleno({ id: editId, dia, hora: h, dur });
     return `<button type="button" data-v="${h}" ${busy ? "disabled" : ""} aria-pressed="${h === sel}">${h}</button>`;
   }).join("");
   if ($("hora").querySelector("[aria-pressed=true][disabled]")) setSeg($("hora"), "");
   else $("hora").dataset.value = sel;
 }
 function setCobT(p) {
-  $("tdni").value = p?.dni || ""; $("tent").value = p?.ent || ""; $("taf").value = p?.afil || "";
+  $("tdni").value = p?.dni || ""; $("tficha").value = p?.ficha || ""; $("tent").value = p?.ent || ""; $("taf").value = p?.afil || "";
   setSeg($("tcob"), p?.cob || ""); $("tcobrow").classList.toggle("hide", !["obra social", "prepaga"].includes(p?.cob));
 }
-function cobDatos() { const c = val($("tcob")), x = c === "obra social" || c === "prepaga"; return { dni: $("tdni").value.trim(), cob: c, ent: x ? $("tent").value.trim() : "", afil: x ? $("taf").value.trim() : "" }; }
+function cobDatos() { const c = val($("tcob")), x = c === "obra social" || c === "prepaga"; return { ficha: $("tficha").value.trim(), dni: $("tdni").value.trim(), cob: c, ent: x ? $("tent").value.trim() : "", afil: x ? $("taf").value.trim() : "" }; }
 function fillFromPatient() { const n = $("nombre").value.trim().toLowerCase(), p = n && pacientes.find(x => x.nombre.toLowerCase() === n); if (p) { $("tel").value = p.tel || ""; setCobT(p); } }
 $("nombre").addEventListener("input", fillFromPatient);
 function open(t, hora) {
@@ -261,7 +269,7 @@ function open(t, hora) {
   $("dt").textContent = t ? "Editar turno" : "Nuevo turno";
   $("nombre").value = t?.nombre || ""; $("tel").value = t?.tel || ""; $("notas").value = t?.notas || "";
   setDate($("dia"), t?.dia || current);
-  setSeg($("dur"), String(t?.dur || 30)); setSeg($("trat"), t?.trat || "Consulta"); setSeg($("est"), t?.est || "pendiente");
+  setSeg($("dur"), String(t?.dur || 15)); setSeg($("trat"), t?.trat || "Consulta"); setSeg($("est"), t?.est || "pendiente");
   $("hora").dataset.value = t?.hora || hora || ""; renderSlots();
   setCobT(t ? pacientes.find(x => x.id === t.pid) : null);
   $("err").textContent = ""; $("aud").innerHTML = t ? audit(t) : ""; $("del").hidden = $("wa").hidden = !t;
@@ -272,8 +280,8 @@ $("f").addEventListener("submit", async e => {
   const nombre = $("nombre").value.trim(), prev = turnos.find(x => x.id === editId) || {};
   const t = { ...prev, id: editId || uid(), nombre, tel: $("tel").value.trim(), dia: $("dia").dataset.value, hora: val($("hora")), trat: val($("trat")), dur: +val($("dur")), est: val($("est")), notas: $("notas").value.trim(), ...stamp(prev) };
   if (!t.hora) { $("err").textContent = "Elegí un horario."; return; }
-  const c = activo(t) && turnos.find(x => choca(t, x));
-  if (c) { $("err").textContent = `Se superpone con el turno de ${c.nombre} (${c.hora}).`; return; }
+  const c = activo(t) && lleno(t);
+  if (c) { $("err").textContent = `Ese horario ya tiene ${CUPO} pacientes (${c.map(x => x.nombre).join(" y ")}).`; return; }
   try {
     let p = pacientes.find(x => x.id === prev.pid) || pacientes.find(x => x.nombre.toLowerCase() === nombre.toLowerCase());
     const d = { tel: t.tel || p?.tel || "", ...cobDatos() };
@@ -297,7 +305,7 @@ seg($("pcob"), v => $("pcobrow").classList.toggle("hide", !["obra social", "prep
 function openP(p) {
   editP = p?.id || null; $("dpt").textContent = p ? "Editar paciente" : "Nuevo paciente";
   $("pn").value = p?.nombre || ""; $("pt").value = p?.tel || ""; $("pm").value = p?.motivo || "";
-  $("pdni").value = p?.dni || ""; $("pem").value = p?.email || ""; setDate($("pfn"), p?.fnac);
+  $("pdni").value = p?.dni || ""; $("pficha").value = p?.ficha || ""; $("pem").value = p?.email || ""; setDate($("pfn"), p?.fnac);
   setSeg($("pcob"), p?.cob || ""); $("pent").value = p?.ent || ""; $("paf").value = p?.afil || "";
   $("pcobrow").classList.toggle("hide", !["obra social", "prepaga"].includes(p?.cob));
   $("paud").innerHTML = p ? audit(p) : ""; $("pdel").hidden = $("pturno").hidden = !p;
@@ -306,7 +314,7 @@ function openP(p) {
 $("fp").addEventListener("submit", async e => {
   e.preventDefault();
   const prev = pacientes.find(x => x.id === editP) || {}, cob = val($("pcob")), x = cob === "obra social" || cob === "prepaga";
-  const p = { media: [], ...prev, id: editP || "p" + uid(), nombre: $("pn").value.trim(), tel: $("pt").value.trim(), motivo: $("pm").value.trim(), dni: $("pdni").value.trim(), fnac: $("pfn").dataset.value, email: $("pem").value.trim(), cob, ent: x ? $("pent").value.trim() : "", afil: x ? $("paf").value.trim() : "", ...stamp(prev) };
+  const p = { media: [], ...prev, id: editP || "p" + uid(), nombre: $("pn").value.trim(), tel: $("pt").value.trim(), motivo: $("pm").value.trim(), ficha: $("pficha").value.trim(), dni: $("pdni").value.trim(), fnac: $("pfn").dataset.value, email: $("pem").value.trim(), cob, ent: x ? $("pent").value.trim() : "", afil: x ? $("paf").value.trim() : "", ...stamp(prev) };
   try { await put("pacientes", p); } catch { return; }
   closeDlg($("dp")); toast(editP ? "Paciente actualizado" : "Paciente guardado"); render();
 });

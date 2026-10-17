@@ -16,4 +16,4 @@ export const cloudinary = {
 
 // Horario de la agenda (minutos desde 00:00) y largo de cada bloque.
 // cupo: cuántos pacientes pueden estar a la vez en un mismo horario
-export const agenda = { start: 16 * 60, end: 20 * 60, step: 15, cupo: 2 };
+export const agenda = { start: 14 * 60, end: 20 * 60 + 15, step: 15, cupo: 2 };
